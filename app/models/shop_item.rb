@@ -122,7 +122,7 @@ class ShopItem < ApplicationRecord
       end
 
       cutoff = RECENTLY_ADDED_WINDOW.ago
-      recently_added = buyable.select { |item| item.created_at >= cutoff }.sort_by(&:created_at).reverse
+      recently_added = buyable.select { |item| item.created_at >= cutoff && item.type != "ShopItem::FreeStickers" }.sort_by(&:created_at).reverse
 
       { buyable_standalone: buyable, recently_added: recently_added }
     end
