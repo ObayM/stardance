@@ -1,0 +1,82 @@
+<% content_for :title, "Notifications Lab" %>
+
+<main class="notifications-lab">
+  <header class="notifications-lab__header">
+    <h1 class="notifications-lab__title">Notifications Lab</h1>
+    <p class="notifications-lab__hint">
+      Sandbox for triggering registered notification types at yourself.
+      Use this to validate inbox rendering, aggregation, and Slack delivery before shipping.
+    </p>
+    <div class="notifications-lab__actions">
+      <%= link_to "Open my inbox →", my_notifications_path, class: "notifications-lab__link" %>
+      <%= button_to "Wipe my notifications", dev_notifications_lab_path,
+                    method: :delete,
+                    class: "notifications-lab__action notifications-lab__action--danger",
+                    data: { turbo_confirm: "Delete all your notifications?" },
+                    form: { data: { turbo: false } } %>
+    </div>
+  </header>
+
+  <section class="notifications-lab__panel">
+    <h2 class="notifications-lab__subtitle">Fire a notification</h2>
+    <ul class="notifications-lab__type-list">
+      <% @types.each do |klass| %>
+        <li class="notifications-lab__type">
+          <div class="notifications-lab__type-meta">
+            <strong class="notifications-lab__type-name"><%= klass.name %></strong>
+            <span class="notifications-lab__type-priority notifications-lab__type-priority--<%= klass.default_priority %>">
+              <%= klass.default_priority %>
+            </span>
+            <% if klass.aggregatable %>
+              <span class="notifications-lab__type-tag">aggregatable</span>
+            <% end %>
+            <p class="notifications-lab__type-description"><%= klass.category_description %></p>
+          </div>
+          <%= button_to "Fire", fire_dev_notifications_lab_path(category: klass.category_key),
+                        method: :post,
+                        class: "notifications-lab__action",
+                        form: { data: { turbo: false } } %>
+        </li>
+      <% end %>
+    </ul>
+  </section>
+
+  <section class="notifications-lab__panel">
+    <h2 class="notifications-lab__subtitle">Your last 50 notifications</h2>
+
+    <% if @notifications.any? %>
+      <table class="notifications-lab__table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Type</th>
+            <th>Priority</th>
+            <th>Actor</th>
+            <th>Count</th>
+            <th>Seen</th>
+            <th>Read</th>
+            <th>Slack</th>
+            <th>Created</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @notifications.each do |notification| %>
+            <tr>
+              <td><%= notification.id %></td>
+              <td><%= notification.type.sub("Notifications::", "") %></td>
+              <td><%= notification.priority %></td>
+              <td><%= notification.actor&.display_name || "—" %></td>
+              <td><%= notification.group_count %></td>
+              <td><%= notification.seen_at ? "✓" : "·" %></td>
+              <td><%= notification.read_at ? "✓" : "·" %></td>
+              <td><%= notification.slack_enqueued_at ? "✓" : "·" %></td>
+              <td><%= notification.created_at.strftime("%H:%M:%S") %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    <% else %>
+      <p class="notifications-lab__empty">No notifications yet — fire one above.</p>
+    <% end %>
+  </section>
+</main>
