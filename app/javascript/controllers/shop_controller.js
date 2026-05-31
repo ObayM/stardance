@@ -54,12 +54,17 @@ export default class extends Controller {
     this.applyFiltersAndSort();
   }
 
+  itemsContainer() {
+    if (this.hasItemsTarget) return this.itemsTarget;
+    return document.querySelector(".shop__items");
+  }
+
   applyFiltersAndSort() {
-    const itemsContainer = document.querySelector(".shop__items");
-    if (!itemsContainer) return;
+    const container = this.itemsContainer();
+    if (!container) return;
 
     const items = Array.from(
-      itemsContainer.querySelectorAll(".shop-item-card"),
+      container.querySelectorAll(".shop-item-card"),
     );
 
     items.forEach((item) => {
@@ -131,11 +136,11 @@ export default class extends Controller {
   }
 
   sortItems() {
-    const itemsContainer = document.querySelector(".shop__items");
-    if (!itemsContainer) return;
+    const container = this.itemsContainer();
+    if (!container) return;
 
     const items = Array.from(
-      itemsContainer.querySelectorAll(".shop-item-card"),
+      container.querySelectorAll(".shop-item-card"),
     );
 
     if (this.sortType === "Prices") {
@@ -156,7 +161,7 @@ export default class extends Controller {
       });
     }
 
-    items.forEach((item) => itemsContainer.appendChild(item));
+    items.forEach((item) => container.appendChild(item));
   }
 
   extractPrice(element) {
