@@ -12,17 +12,13 @@ class Api::V1::Certification::ShipsController < Api::V1::Certification::BaseCont
     window_start, window_end = parse_time_window
     status_filter = params[:status].presence_in(%w[pending approved returned]) || "all"
 
-    scope = ::Certification::Ship
-              .includes(:reviewer, project: { memberships: :user })
-              .where(created_at: window_start..window_end)
+    scope = ::Certification::Ship.includes(:reviewer, project: { memberships: :user })
+    scope = scope.where(created_at: window_start..window_end) if window_start
 
     scope = scope.where(status: status_filter) unless status_filter == "all"
 
     render json: {
-      window: {
-        from: window_start.iso8601,
-        to: window_end.iso8601
-      },
+      window: window_start ? { from: window_start.iso8601, to: window_end.iso8601 } : nil,
       status_filter: status_filter,
       count: scope.size,
       ships: scope.order(created_at: :desc).map { |ship| serialize_ship(ship) }
@@ -33,6 +29,9 @@ class Api::V1::Certification::ShipsController < Api::V1::Certification::BaseCont
 
   def parse_time_window
     now = Time.current
+
+    # No time params at all then return nil so caller skips the filter :)
+    return [ nil, nil ] if params[:hours].blank? && params[:since].blank? && params[:until].blank?
 
     window_end = parse_time_param(params[:until]) || now
 
