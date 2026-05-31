@@ -439,6 +439,10 @@ Rails.application.routes.draw do
   namespace :api, defaults: { format: :json } do
     namespace :v1 do
       resources :ambassador_referrals, only: [ :index, :show ]
+
+      namespace :certification do
+        resources :ships, only: [ :index ]
+      end
     end
   end
 
