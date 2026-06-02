@@ -4,13 +4,13 @@ Achievement = Data.define(:slug, :name, :description, :icon, :earned_check, :pro
   include ActiveModel::Conversion
   extend ActiveModel::Naming
 
-  VISIBILITIES = %i[visible secret hidden].freeze
+  self::VISIBILITIES = %i[visible secret hidden].freeze
 
   def initialize(slug:, name:, description:, icon:, earned_check:, progress: nil, visibility: :visible, secret_hint: nil, excluded_from_count: false, stardust_reward: 0)
     super(slug:, name:, description:, icon:, earned_check:, progress:, visibility:, secret_hint:, excluded_from_count:, stardust_reward:)
   end
 
-  ALL = [
+  self::ALL = [
     new(
       slug: :super_star,
       name: "Super Star",
@@ -21,25 +21,25 @@ Achievement = Data.define(:slug, :name, :description, :icon, :earned_check, :pro
     )
   ].freeze
 
-  SECRET = (Secrets.available? ? SecretAchievements::DEFINITIONS.map { |d| new(**d) } : []).freeze
+  self::SECRET = (Secrets.available? ? Secrets::SecretAchievements::DEFINITIONS.map { |d| new(**d) } : []).freeze
 
-  ALL_WITH_SECRETS = (ALL + SECRET).freeze
-  SLUGGED = ALL_WITH_SECRETS.index_by(&:slug).freeze
-  ALL_SLUGS = SLUGGED.keys.freeze
+  self::ALL_WITH_SECRETS = (self::ALL + self::SECRET).freeze
+  self::SLUGGED = self::ALL_WITH_SECRETS.index_by(&:slug).freeze
+  self::ALL_SLUGS = self::SLUGGED.keys.freeze
 
   class << self
-    def all = ALL_WITH_SECRETS
+    def all = self::ALL_WITH_SECRETS
 
-    def slugged = SLUGGED
+    def slugged = self::SLUGGED
 
-    def all_slugs = ALL_SLUGS
+    def all_slugs = self::ALL_SLUGS
 
-    def find(slug) = SLUGGED.fetch(slug.to_sym)
+    def find(slug) = self::SLUGGED.fetch(slug.to_sym)
 
     alias_method :[], :find
 
     def countable
-      ALL_WITH_SECRETS.reject(&:excluded_from_count)
+      self::ALL_WITH_SECRETS.reject(&:excluded_from_count)
     end
 
     def countable_for_user(user)
@@ -75,7 +75,7 @@ Achievement = Data.define(:slug, :name, :description, :icon, :earned_check, :pro
 
   def has_stardust_reward? = stardust_reward.positive?
 
-  SECRET_DESCRIPTIONS = [
+  self::SECRET_DESCRIPTIONS = [
     "the secret to this one is... secret",
     "something's brewing... 👀",
     "this one's under wraps",
@@ -95,7 +95,7 @@ Achievement = Data.define(:slug, :name, :description, :icon, :earned_check, :pro
   def display_description(earned:)
     return description if earned || visible?
 
-    secret_hint || SECRET_DESCRIPTIONS.sample
+    secret_hint || self.class::SECRET_DESCRIPTIONS.sample
   end
 
   def show_progress?(earned:)
