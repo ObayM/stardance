@@ -63,6 +63,7 @@ export default class extends Controller {
 
     this.restoreReadmeState();
     this.recheckRequirements();
+    this.toggleUpdateDescription();
 
     if (
       this.hasRepoUrlTarget &&
@@ -467,8 +468,9 @@ export default class extends Controller {
       this.hasUpdateDeclarationTarget && this.updateDeclarationTarget.checked;
     this.updateDescriptionContainerTarget.hidden = !checked;
 
-    if (!checked && this.hasUpdateDescriptionFieldTarget) {
-      this.updateDescriptionFieldTarget.value = "";
+    if (this.hasUpdateDescriptionFieldTarget) {
+      this.updateDescriptionFieldTarget.required = checked;
+      if (!checked) this.updateDescriptionFieldTarget.value = "";
     }
   }
 }

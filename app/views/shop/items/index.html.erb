@@ -3,10 +3,9 @@
 <% content_for :og_description, "Spend your Stardust on stickers, hardware, and other prizes. Earn Stardust by building projects and voting!" %>
 <% content_for :og_image, og_image_url('shop', format: :png) %>
 
-<div class="shop-hub shop-hub--mode-<%= @shop_mode %>"
+<div class="shop-hub"
      data-controller="shop"
-     data-shop-user-region-value="<%= @user_region %>"
-     data-shop-mode-value="<%= @shop_mode %>">
+     data-shop-user-region-value="<%= @user_region %>">
 
   <% if @shop_mode == :preview %>
     <%= render "shop/items/preview_banner" %>
@@ -64,6 +63,7 @@
                     region: @user_region,
                     balance: @user_balance,
                     tutorial_item_ids: pick_ids,
+                    wishlisted_item_ids: @wishlisted_item_ids,
                     spotlight: false %>
             </li>
           <% end %>
@@ -154,14 +154,16 @@
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"> <polyline points="15 18 9 12 15 6" /> </svg>
             </button>
             <ul class="shop-hub__items-grid" data-horizontal-scroll-target="track">
+              <li class="shop-hub__items-card">
+                <%= render "shop/items/hardware_build_fund" %>
+              </li>
               <% @new_items.each do |item| %>
                 <li class="shop-hub__items-card">
                   <%= render "shop/items/item_card",
                         item: item,
-                        mode: @shop_mode,
                         region: @user_region,
                         balance: @user_balance,
-                        tutorial_item_ids: pick_ids %>
+                        wishlisted_item_ids: @wishlisted_item_ids %>
                 </li>
               <% end %>
             </ul>
@@ -193,10 +195,9 @@
                 <li class="shop-hub__items-card">
                   <%= render "shop/items/item_card",
                         item: item,
-                        mode: @shop_mode,
                         region: @user_region,
                         balance: @user_balance,
-                        tutorial_item_ids: pick_ids %>
+                        wishlisted_item_ids: @wishlisted_item_ids %>
                 </li>
               <% end %>
             </ul>
