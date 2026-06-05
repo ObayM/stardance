@@ -1,4 +1,10 @@
 <article id="<%= dom_id(post) %>" class="<%= card_classes %>" <%= tag.attributes(data: engagement_data) %>>
+  <% if super_star_event? %>
+    <div class="feed-post-card__super-star-badge" aria-hidden="true">
+      <%= inline_svg_tag "icons/star_fill.svg", class: "feed-post-card__super-star-badge-icon" %>
+    </div>
+  <% end %>
+
   <% if card_link_url.present? %>
     <%= link_to card_link_url,
           class: "feed-post-card__overlay-link",
@@ -35,7 +41,11 @@
         <% end %>
 
         <% if project.present? %>
-          <span class="feed-post-card__context">on</span>
+          <% if super_star_event? %>
+            <span class="feed-post-card__context">awarded a Super Star to</span>
+          <% else %>
+            <span class="feed-post-card__context">on</span>
+          <% end %>
           <%= link_to project.title, project_path(project), class: "feed-post-card__project" %>
         <% end %>
 
@@ -60,7 +70,16 @@
     </div>
   </header>
 
-  <% if body.present? && !quote_repost? %>
+  <% if super_star_event? %>
+    <div class="feed-post-card__body feed-post-card__body--super-star">
+      Tagged your project as Super Star!
+    </div>
+    <% if body.present? %>
+      <div class="feed-post-card__body markdown-content">
+        <%= helpers.md(body, allow_images: false) %>
+      </div>
+    <% end %>
+  <% elsif body.present? && !quote_repost? %>
     <div class="feed-post-card__body markdown-content">
       <%= helpers.md(body, allow_images: false) %>
     </div>

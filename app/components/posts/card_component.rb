@@ -41,13 +41,18 @@ module Posts
       repost? && !plain_repost?
     end
 
+    def super_star_event?
+      display_post&.postable_type == "Post::FireEvent"
+    end
+
     def card_classes
       class_names(
         "feed-post-card",
         "feed-post-card--linked": card_link_url.present?,
         "feed-post-card--compact": compact,
         "feed-post-card--quote-repost": quote_repost?,
-        "feed-post-card--#{theme}": theme.present?
+        "feed-post-card--super-star": super_star_event?,
+        "feed-post-card--#{theme}": theme.present? && !super_star_event?
       )
     end
 
