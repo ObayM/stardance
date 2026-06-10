@@ -1,57 +1,66 @@
 class Api::V1::Certification::ShipsController < Api::V1::Certification::BaseController
+  class InvalidParam < StandardError; end
+
+  rescue_from InvalidParam do |error|
+    render json: { error: error.message }, status: :bad_request
+  end
+
   # GET /api/v1/certification/ships
   #
-  # Returns ship certifications within a specific time frame!
+  # Returns ship certification reviews within a time window (default: the last 24 hours).
   #
   # Query params:
-  #   hours (integer, default 24)
+  #   hours (positive integer, default 24; ignored when since is given)
   #   since (ISO 8601 datetime)
-  #   until (ISO 8601 datetime)
+  #   until (ISO 8601 datetime, default now)
   #   status (pending|approved|returned|all, default all)
   def index
     window_start, window_end = parse_time_window
     status_filter = params[:status].presence_in(%w[pending approved returned]) || "all"
 
-    scope = ::Certification::Ship.includes(:reviewer, project: { memberships: :user })
-    scope = scope.where(created_at: window_start..window_end) if window_start
-
+    scope = ::Certification::Ship
+      .joins(:project)
+      .where(projects: { deleted_at: nil })
+      .where(created_at: window_start..window_end)
+      .includes(:reviewer, project: { memberships: :user })
     scope = scope.where(status: status_filter) unless status_filter == "all"
 
+    ships = scope.order(created_at: :desc).map { |ship| serialize_ship(ship) }
+
     render json: {
-      window: window_start ? { from: window_start.iso8601, to: window_end.iso8601 } : nil,
+      window: { from: window_start.iso8601, to: window_end.iso8601 },
       status_filter: status_filter,
-      count: scope.size,
-      ships: scope.order(created_at: :desc).map { |ship| serialize_ship(ship) }
+      count: ships.size,
+      ships: ships
     }
   end
 
   private
 
   def parse_time_window
-    now = Time.current
-
-    # No time params at all then return nil so caller skips the filter :)
-    return [ nil, nil ] if params[:hours].blank? && params[:since].blank? && params[:until].blank?
-
-    window_end = parse_time_param(params[:until]) || now
-
-    window_start = if params[:since].present?
-      parse_time_param(params[:since]) || (now - 24.hours)
-    else
-      hours = params[:hours].to_i
-      hours = 24 if hours <= 0
-      window_end - hours.hours
-    end
+    window_end = parse_time_param(:until) || Time.current
+    window_start = parse_time_param(:since) || window_end - window_hours.hours
+    raise InvalidParam, "since must be earlier than until" if window_start > window_end
 
     [ window_start, window_end ]
   end
 
-  def parse_time_param(value)
+  def window_hours
+    return 24 if params[:hours].blank?
+
+    hours = Integer(params[:hours], exception: false)
+    raise InvalidParam, "hours must be a positive integer" unless hours&.positive?
+
+    hours
+  end
+
+  def parse_time_param(key)
+    value = params[key]
     return nil if value.blank?
 
-    Time.zone.parse(value.to_s)
+    Time.zone.parse(value.to_s) || raise(InvalidParam, "#{key} is not a valid ISO 8601 datetime")
   rescue ArgumentError, TypeError
-    nil
+    raise InvalidParam, "#{key} is not a valid ISO 8601 datetime"
   end
 
   def serialize_ship(ship)
