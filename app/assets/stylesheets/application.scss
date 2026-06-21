@@ -82,6 +82,7 @@
 @use "pages/certification/ships/index" as certification_ships_index;
 @use "pages/certification/ships/show" as certification_ships_show;
 @use "pages/certification/ships/monitor" as certification_ships_monitor;
+@use "pages/certification/ships/spot_checks" as certification_ships_spot_checks;
 @use "pages/certification/mystats" as certification_mystats;
 @use "pages/certification/payouts" as certification_payouts;
 @use "pages/raffle";

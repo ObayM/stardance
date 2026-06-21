@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_18_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_21_000000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "vector"
@@ -204,13 +204,25 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_18_120000) do
     t.text "recert_reason"
     t.bigint "returned_by_id"
     t.bigint "reviewer_id"
-    t.integer "stardust_earned"
+    t.float "stardust_earned"
     t.integer "status", default: 0, null: false
     t.datetime "updated_at", null: false
     t.index ["decided_at"], name: "index_certification_ship_reviews_on_decided_at"
     t.index ["project_id"], name: "index_ship_reviews_unique_pending_project", unique: true, where: "(status = 0)"
     t.index ["reviewer_id"], name: "index_certification_ship_reviews_on_reviewer_id"
     t.index ["status", "claim_expires_at"], name: "idx_on_status_claim_expires_at_c7a5e87a52"
+  end
+
+  create_table "certification_ship_spot_checks", force: :cascade do |t|
+    t.bigint "checker_id", null: false
+    t.datetime "created_at", null: false
+    t.text "justification"
+    t.integer "rating", default: 0, null: false
+    t.bigint "ship_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["checker_id"], name: "index_certification_ship_spot_checks_on_checker_id"
+    t.index ["ship_id"], name: "index_certification_ship_spot_checks_on_ship_id"
+    t.index ["ship_id"], name: "index_ship_spot_checks_unique_per_ship", unique: true
   end
 
   create_table "certification_ysws_reviews", force: :cascade do |t|
@@ -861,7 +873,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_18_120000) do
     t.text "adjust_reason"
     t.integer "adjusted_amount"
     t.bigint "admin_id"
-    t.integer "amount", null: false
+    t.integer "amount"
     t.datetime "created_at", null: false
     t.integer "paid_amount"
     t.datetime "paid_at"
@@ -869,7 +881,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_18_120000) do
     t.bigint "user_id", null: false
     t.index ["admin_id"], name: "index_reviewer_payout_requests_on_admin_id"
     t.index ["user_id"], name: "index_reviewer_payout_requests_on_user_id"
-    t.index ["user_id"], name: "index_reviewer_payout_requests_on_user_id_pending", unique: true, where: "((aasm_state)::text = 'pending'::text)"
   end
 
   create_table "rsvp_games", force: :cascade do |t|
@@ -1451,6 +1462,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_18_120000) do
   add_foreign_key "certification_funding_requests", "users", column: "reviewer_id"
   add_foreign_key "certification_ship_reviews", "projects"
   add_foreign_key "certification_ship_reviews", "users", column: "reviewer_id"
+  add_foreign_key "certification_ship_spot_checks", "certification_ship_reviews", column: "ship_id"
+  add_foreign_key "certification_ship_spot_checks", "users", column: "checker_id"
   add_foreign_key "certification_ysws_reviews", "certification_ship_reviews", column: "ship_cert_id"
   add_foreign_key "certification_ysws_reviews", "post_ship_events"
   add_foreign_key "certification_ysws_reviews", "projects"

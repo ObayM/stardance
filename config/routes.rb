@@ -760,12 +760,15 @@ Rails.application.routes.draw do
           get :next
           get :logs
           get :monitor, to: "ships/monitor#show"
+          get :spot_checks, to: "ship_spot_checks#index"
         end
         patch :set_project_type, on: :member
         scope module: :ships do
           resource :claim, only: [ :create, :destroy ]
         end
       end
+
+      resources :ship_spot_checks, path: "ship/:ship_id/spot_check", only: [ :create ]
 
       resources :funding_requests, path: "funding", only: [ :index, :show, :update ] do
         collection do

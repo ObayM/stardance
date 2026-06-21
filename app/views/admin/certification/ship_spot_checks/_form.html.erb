@@ -1,0 +1,40 @@
+<% filter_params = request.query_parameters.slice(:reviewer_id, :status, :sort, :rating, :page) %>
+<%= form_with model: existing || Certification::ShipSpotCheck.new,
+      url: admin_certification_ship_spot_checks_path(ship_id: ship.id, **filter_params),
+      class: "spot-checks__form",
+      data: { controller: "spot-check-form" } do |f| %>
+
+  <div class="spot-checks__form-radios">
+    <label class="spot-checks__radio-label spot-checks__radio-label--good">
+      <%= f.radio_button :rating, :good,
+            class: "spot-checks__radio",
+            id: "rating_good_#{ship.id}",
+            checked: existing&.good?,
+            data: { action: "change->spot-check-form#toggleJustification" } %>
+      <span class="spot-checks__radio-text">✓ Good</span>
+    </label>
+    <label class="spot-checks__radio-label spot-checks__radio-label--bad">
+      <%= f.radio_button :rating, :bad,
+            class: "spot-checks__radio",
+            id: "rating_bad_#{ship.id}",
+            checked: existing&.bad?,
+            data: { action: "change->spot-check-form#toggleJustification" } %>
+      <span class="spot-checks__radio-text">✗ Bad</span>
+    </label>
+  </div>
+
+  <div class="spot-checks__justification-wrap"
+       data-spot-check-form-target="justification"
+       style="<%= existing&.bad? ? "" : "display: none;" %>">
+    <%= f.label :justification, "Justification (required for bad reviews)", class: "spot-checks__field-label" %>
+    <%= f.text_area :justification,
+          rows: 3,
+          placeholder: "Explain why this review was poor quality…",
+          class: "spot-checks__textarea" %>
+  </div>
+
+  <div class="spot-checks__form-actions">
+    <%= f.submit existing ? "Update" : "Record",
+          class: "action-btn action-btn--small action-btn--primary" %>
+  </div>
+<% end %>

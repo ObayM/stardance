@@ -1,0 +1,249 @@
+<% content_for :title, "Spot checks" %>
+
+<div class="app-layout app-layout--wide" data-controller="certification--queue">
+  <div class="app-layout__main app-layout__main--wide ship-queue">
+    <%= link_to "← Back to queue", admin_certification_ships_path, class: "ship-queue__back" %>
+
+    <header class="ship-queue__header">
+      <div class="ship-queue__title">
+        <h1>Spot checks</h1>
+      </div>
+    </header>
+
+    <%# Stats overview %>
+    <%# Stats & Leaderboard overview %>
+    <section class="ship-queue__overview">
+      <div class="ship-queue__stats">
+        <div class="ship-queue__metrics">
+          <div class="ship-queue__metric">
+            <span class="ship-queue__label">Total reviewed</span>
+            <span class="ship-queue__metric-value"><%= @stats[:total_decided] %></span>
+          </div>
+          <div class="ship-queue__metric">
+            <span class="ship-queue__label">Spot-checked</span>
+            <span class="ship-queue__metric-value"><%= @stats[:checked] %></span>
+          </div>
+          <div class="ship-queue__metric">
+            <span class="ship-queue__label">Unchecked</span>
+            <span class="ship-queue__metric-value ship-queue__muted"><%= @stats[:unchecked] %></span>
+          </div>
+          <div class="ship-queue__metric">
+            <span class="ship-queue__label">Good reviews</span>
+            <span class="ship-queue__metric-value is-positive">
+              <%= @stats[:good] %>
+            </span>
+            <span class="ship-queue__metric-hint">
+              <% if @stats[:checked] > 0 %><%= (@stats[:good] * 100.0 / @stats[:checked]).round %>%<% end %>
+            </span>
+          </div>
+          <div class="ship-queue__metric">
+            <span class="ship-queue__label">Bad reviews</span>
+            <span class="ship-queue__metric-value is-negative">
+              <%= @stats[:bad] %>
+            </span>
+            <span class="ship-queue__metric-hint">
+              <% if @stats[:checked] > 0 %><%= (@stats[:bad] * 100.0 / @stats[:checked]).round %>%<% end %>
+            </span>
+          </div>
+          <% if @stats[:coverage_pct] %>
+            <div class="ship-queue__metric">
+              <span class="ship-queue__label">Coverage</span>
+              <span class="ship-queue__metric-value"><%= @stats[:coverage_pct] %>%</span>
+            </div>
+          <% end %>
+        </div>
+      </div>
+
+      <div class="ship-queue__leaderboard">
+        <div class="ship-queue__leaderboard-head">
+          <h2>Leaderboard</h2>
+          <div class="ship-queue__tabs" role="tablist">
+            <% %w[daily weekly alltime].each do |period| %>
+              <button type="button"
+                      class="ship-queue__tab <%= "is-active" if period == @lb_period %>"
+                      data-certification--queue-target="tab"
+                      data-period="<%= period %>"
+                      data-action="certification--queue#switch">
+                <%= period == "alltime" ? "All time" : period.capitalize %>
+              </button>
+            <% end %>
+          </div>
+        </div>
+
+        <% %w[daily weekly alltime].each do |period| %>
+          <ol class="ship-queue__ranks <%= "is-hidden" unless period == @lb_period %>"
+              data-certification--queue-target="panel"
+              data-period="<%= period %>">
+            <% rows = @leaderboards[period] %>
+            <% if rows.empty? %>
+              <li class="ship-queue__ranks-empty">No spot checks yet.</li>
+            <% else %>
+              <% rows.each_with_index do |row, i| %>
+                <li class="ship-queue__rank">
+                  <span class="ship-queue__rank-pos"><%= i + 1 %></span>
+                  <span class="ship-queue__rank-name"><%= row[:name] %></span>
+                  <span class="ship-queue__rank-count"><%= row[:count] %></span>
+                </li>
+              <% end %>
+            <% end %>
+          </ol>
+        <% end %>
+      </div>
+    </section>
+
+    <%# Filters %>
+    <%= form_with url: spot_checks_admin_certification_ships_path, method: :get,
+          data: { certification__queue_target: "filters" }, class: "ship-queue__filters" do %>
+      <div class="ship-queue__filter">
+        <label for="filter-reviewer">Reviewer</label>
+        <%= select_tag :reviewer_id,
+              options_from_collection_for_select(@reviewers, :id, :display_name, @reviewer_id&.to_i),
+              id: "filter-reviewer", class: "ship-queue__select", include_blank: "All reviewers",
+              data: { action: "change->certification--queue#submit" } %>
+      </div>
+      <div class="ship-queue__filter">
+        <label for="filter-status">Review status</label>
+        <%= select_tag :status,
+              options_for_select([["All decided", "all"], ["Approved", "approved"], ["Returned", "returned"]], @status),
+              id: "filter-status", class: "ship-queue__select",
+              data: { action: "change->certification--queue#submit" } %>
+      </div>
+      <div class="ship-queue__filter">
+        <label for="filter-rating">Spot check</label>
+        <%= select_tag :rating,
+              options_for_select([["Unchecked", "unchecked"], ["Good", "good"], ["Bad", "bad"], ["All", "all"]], @rating),
+              id: "filter-rating", class: "ship-queue__select",
+              data: { action: "change->certification--queue#submit" } %>
+      </div>
+      <div class="ship-queue__filter">
+        <label for="filter-sort">Sort</label>
+        <%= select_tag :sort,
+              options_for_select([["Newest first", "newest"], ["Oldest first", "oldest"]], @sort),
+              id: "filter-sort", class: "ship-queue__select",
+              data: { action: "change->certification--queue#submit" } %>
+      </div>
+      <div class="ship-queue__filter-actions">
+        <button type="submit" class="action-btn action-btn--small action-btn--secondary">Apply</button>
+        <%= link_to "Reset", spot_checks_admin_certification_ships_path, class: "ship-queue__reset" %>
+      </div>
+    <% end %>
+
+    <% if @ships.empty? %>
+      <div class="ship-queue__empty">
+        <p>No reviews match these filters.</p>
+      </div>
+    <% else %>
+      <div class="ship-queue__table-wrap">
+        <table class="ship-queue__table">
+          <thead>
+            <tr>
+              <th>Project</th>
+              <th>Feedback</th>
+              <th class="ship-queue__cell-status">Status</th>
+              <th class="spot-checks__cell-spotcheck">Spot check</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @ships.each do |ship| %>
+              <% owner = ship.project.memberships.find(&:owner?)&.user %>
+              <% existing = @spot_checks_by_ship[ship.id] %>
+              <tr>
+                <td class="ship-queue__cell-project">
+                  <div class="ship-queue__project-head">
+                    <%= link_to ship.project.title, admin_certification_ship_path(ship), class: "ship-queue__project-title", target: "_blank" %>
+                    <span class="ship-queue__project-id">#<%= ship.id %></span>
+                  </div>
+                  <div class="ship-queue__project-meta">
+                    <span>by <%= owner&.display_name || "—" %></span>
+                    <span class="ship-queue__dot" aria-hidden="true">·</span>
+                    <% if ship.reviewer %>
+                      <span>reviewed by <%= ship.reviewer.display_name %></span>
+                      <span class="ship-queue__dot" aria-hidden="true">·</span>
+                    <% end %>
+                    <span><%= time_ago_in_words(ship.decided_at || ship.updated_at) %> ago</span>
+                  </div>
+                </td>
+                <td class="ship-queue__cell-feedback">
+                  <% if ship.feedback.present? %>
+                    <p style="margin-bottom: var(--space-xs);"><%= truncate(ship.feedback, length: 120) %></p>
+                  <% else %>
+                    <span style="color: var(--color-muted);">—</span>
+                  <% end %>
+                  <% if ship.verdict_video.attached? %>
+                    <%= link_to "▶ Watch video", url_for(ship.verdict_video), class: "action-btn action-btn--small action-btn--secondary", target: "_blank", rel: "noopener", style: "display: inline-flex; align-items: center; padding: 4px 8px; font-size: 0.75rem;" %>
+                  <% end %>
+                </td>
+                <td class="ship-queue__cell-status">
+                  <span class="status-pill status-pill--<%= ship.status %>"><%= ship.status.capitalize %></span>
+                </td>
+                <td class="spot-checks__cell-spotcheck">
+                  <% if existing %>
+                    <div class="spot-checks__result spot-checks__result--<%= existing.rating %>">
+                      <span class="spot-checks__result-badge">
+                        <%= existing.rating == "good" ? "✓ Good" : "✗ Bad" %>
+                      </span>
+                      <% if existing.justification.present? %>
+                        <p class="spot-checks__result-justification"><%= truncate(existing.justification, length: 80) %></p>
+                      <% end %>
+                      <span class="spot-checks__result-meta">by <%= existing.checker&.display_name %></span>
+                    </div>
+
+                    <details class="spot-checks__override">
+                      <summary class="spot-checks__override-toggle">Edit</summary>
+                      <%= render "form", ship: ship, existing: existing %>
+                    </details>
+                  <% else %>
+                    <%= render "form", ship: ship, existing: nil %>
+                  <% end %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+
+      <%# Mobile for sure %>
+      <div class="ship-queue__cards">
+        <% @ships.each do |ship| %>
+          <% owner = ship.project.memberships.find(&:owner?)&.user %>
+          <% existing = @spot_checks_by_ship[ship.id] %>
+          <div class="ship-queue__card spot-checks__mobile-card">
+            <div class="ship-queue__card-top">
+              <%= link_to ship.project.title, admin_certification_ship_path(ship), class: "ship-queue__project-title", target: "_blank" %>
+              <span class="status-pill status-pill--<%= ship.status %>"><%= ship.status.capitalize %></span>
+            </div>
+            <div class="ship-queue__project-meta">
+              <span>#<%= ship.id %></span>
+              <span class="ship-queue__dot" aria-hidden="true">·</span>
+              <span>by <%= owner&.display_name || "—" %></span>
+              <span class="ship-queue__dot" aria-hidden="true">·</span>
+              <span>reviewed by <%= ship.reviewer&.display_name || "—" %></span>
+            </div>
+            <div class="spot-checks__mobile-form">
+              <% if existing %>
+                <div class="spot-checks__result spot-checks__result--<%= existing.rating %>">
+                  <span class="spot-checks__result-badge"><%= existing.rating == "good" ? "✓ Good" : "✗ Bad" %></span>
+                  <% if existing.justification.present? %>
+                    <p class="spot-checks__result-justification"><%= truncate(existing.justification, length: 60) %></p>
+                  <% end %>
+                </div>
+                <details class="spot-checks__override">
+                  <summary class="spot-checks__override-toggle">Edit</summary>
+                  <%= render "form", ship: ship, existing: existing %>
+                </details>
+              <% else %>
+                <%= render "form", ship: ship, existing: nil %>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    <% end %>
+
+    <% if @pagy.pages > 1 %>
+      <div class="ship-queue__pagination">
+        <%== @pagy.series_nav %>
+      </div>
+    <% end %>
+  </div>
+</div>

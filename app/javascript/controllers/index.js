@@ -301,6 +301,9 @@ application.register("slack-doodle", SlackDoodleController);
 import SortableController from "./sortable_controller";
 application.register("sortable", SortableController);
 
+import SpotCheckFormController from "./spot_check_form_controller";
+application.register("spot-check-form", SpotCheckFormController);
+
 import StarImageInputController from "./star_image_input_controller";
 application.register("star-image-input", StarImageInputController);
 

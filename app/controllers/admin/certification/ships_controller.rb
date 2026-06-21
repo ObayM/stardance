@@ -71,6 +71,7 @@ class Admin::Certification::ShipsController < Admin::Certification::ApplicationC
   def show
     authorize @ship
     @reviewed_today = ::Certification::Ship.reviewed_today(current_user)
+    @spot_check = ::Certification::ShipSpotCheck.find_by(ship_id: @ship.id) if current_user.admin? || current_user.super_admin?
   end
 
   def set_project_type

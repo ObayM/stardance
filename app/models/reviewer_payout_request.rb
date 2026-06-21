@@ -12,9 +12,6 @@
 #  paid_amount     :integer
 #  paid_at         :datetime
 #  created_at      :datetime         not null
-#  updated_at      :datetime         not null
-#  admin_id        :bigint
-#  user_id         :bigint           not null
 #
 # Indexes
 #

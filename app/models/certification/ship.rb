@@ -44,6 +44,8 @@ module Certification
     belongs_to :reviewer, class_name: "User", optional: true
     belongs_to :returned_by, class_name: "User", optional: true
 
+    has_one :spot_check, class_name: "Certification::ShipSpotCheck", foreign_key: :ship_id, dependent: :destroy
+
     has_paper_trail
 
     # The reviewer records a walkthrough and passes it along with the verdict.

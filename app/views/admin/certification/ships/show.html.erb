@@ -95,6 +95,29 @@
           </div>
         <% end %>
 
+        <% if !@ship.pending? && (current_user.admin? || current_user.super_admin?) %>
+          <div class="ship-review__panel" style="margin-top: var(--space-m);">
+            <h2 class="ship-review__panel-title" style="margin-bottom: var(--space-s);">Spot Check</h2>
+            <% if @spot_check %>
+              <div class="spot-checks__result spot-checks__result--<%= @spot_check.rating %>">
+                <span class="spot-checks__result-badge">
+                  <%= @spot_check.rating == "good" ? "✓ Good" : "✗ Bad" %>
+                </span>
+                <% if @spot_check.justification.present? %>
+                  <p class="spot-checks__result-justification"><%= @spot_check.justification %></p>
+                <% end %>
+                <span class="spot-checks__result-meta">by <%= @spot_check.checker&.display_name %></span>
+              </div>
+              <details class="spot-checks__override" style="margin-top: var(--space-xs);">
+                <summary class="spot-checks__override-toggle">Edit spot check</summary>
+                <%= render "admin/certification/ship_spot_checks/form", ship: @ship, existing: @spot_check %>
+              </details>
+            <% else %>
+              <%= render "admin/certification/ship_spot_checks/form", ship: @ship, existing: nil %>
+            <% end %>
+          </div>
+        <% end %>
+
       </section>
 
       <aside class="ship-review__sidebar">
