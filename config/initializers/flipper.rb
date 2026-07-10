@@ -37,6 +37,14 @@ Rails.application.config.after_initialize do
         gorse_recommendations
         gorse_personalized_feed
         gorse_project_recommendations
+        week_1_release
+        hardware_flow
+        ship_event_payouts
+        lookout
+        payout_recommendations
+        hardware_to_outpost
+        disable_internal_sw_dash_reviews
+        sharable_purchase
       ].each { |flag| Flipper.add(flag) }
     end
   rescue StandardError => e

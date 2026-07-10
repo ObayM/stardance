@@ -2,13 +2,21 @@ class CommentsController < ApplicationController
   before_action :set_commentable
   before_action :set_comment, only: [ :destroy ]
 
+  def index
+    @post = Post.includes(:user, :project).find_by(postable: @commentable)
+    @comments = @commentable.comments.for_thread.includes(:user)
+  end
+
   def create
     @comment = @commentable.comments.build(comment_params)
     @comment.user = current_user
     authorize @comment
 
     if @comment.save
-      redirect_back fallback_location: fallback_path
+      respond_to do |format|
+        format.turbo_stream
+        format.html { redirect_back fallback_location: fallback_path }
+      end
     else
       redirect_back fallback_location: fallback_path, alert: @comment.errors.full_messages.to_sentence
     end
@@ -19,7 +27,10 @@ class CommentsController < ApplicationController
 
     @comment.soft_delete!
 
-    redirect_back fallback_location: fallback_path
+    respond_to do |format|
+      format.turbo_stream
+      format.html { redirect_back fallback_location: fallback_path }
+    end
   end
 
   private
