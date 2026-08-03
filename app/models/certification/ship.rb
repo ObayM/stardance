@@ -397,6 +397,10 @@ module Certification
       decided_at || updated_at
     end
 
+    def verdict_details?
+      feedback.present? || verdict_video.attached? || proof_video_url.present?
+    end
+
     # Read by Notifications::Hardware::BuildReviewed to render the Slack blocks,
     # so this has to stay public.
     def notification_locals

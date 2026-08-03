@@ -15,6 +15,8 @@
   payout_review    = local_assigns[:payout_review]
   media_variant    = local_assigns.fetch(:media_variant, :large)
   lazy_media       = local_assigns.fetch(:lazy_media, false)
+  show_approved_badge = local_assigns.fetch(:show_approved_badge, false)
+  approval_modal_id   = local_assigns[:approval_modal_id]
   engagement_data = if track_engagement
     {
       controller: "feed-engagement",
@@ -48,6 +50,17 @@
         </button>
       <% else %>
         <span class="project-show__latest-ship-status project-show__latest-ship-status--returned">Changes requested</span>
+      <% end %>
+    <% elsif show_approved_badge && ship.certification_status == "approved" %>
+      <% if approval_modal_id %>
+        <button type="button"
+                class="project-show__latest-ship-status project-show__latest-ship-status--certified project-show__latest-ship-status--clickable"
+                onclick="document.getElementById(<%= approval_modal_id.to_json %>).showModal()"
+                aria-haspopup="dialog">
+          Approved ↗
+        </button>
+      <% else %>
+        <span class="project-show__latest-ship-status project-show__latest-ship-status--certified">Approved</span>
       <% end %>
     <% end %>
     <% mission_sub = ship.mission_submission %>

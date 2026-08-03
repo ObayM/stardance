@@ -127,6 +127,8 @@ class ProjectsController < ApplicationController
       end
     end.reverse
 
+    @latest_ship_approval = latest_ship_approval
+
     @show_project_onboarding = @is_member && @timeline_entries.empty?
     @project_onboarding_mission = @project.current_mission
 
@@ -224,6 +226,23 @@ class ProjectsController < ApplicationController
             .to_a
   end
   private :visible_ship_decisions
+
+  def latest_ship_approval
+    return unless current_user
+    return unless @is_member || current_user.can_review?
+
+    ship_event = @project.last_ship_event
+    return unless ship_event&.certification_status == "approved"
+
+    review = @project.ship_reviews
+                     .approved
+                     .where(post_ship_event_id: ship_event.id)
+                     .with_attached_verdict_video
+                     .order(created_at: :desc)
+                     .first
+    review if review&.verdict_details?
+  end
+  private :latest_ship_approval
 
   # Funding requests, shown only to project members (and admins): the amount
   # asked for and the reviewer's feedback are the team's business, not public.

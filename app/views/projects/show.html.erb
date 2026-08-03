@@ -912,6 +912,7 @@
           <% elsif entry.postable_type == "Post::ShipEvent" %>
             <% ship_index += 1 %>
             <% recert_id = ((is_member || current_user&.can_review?) && @project.needs_changes? && ship_index == 1) ? "recert-modal-#{@project.id}" : nil %>
+            <% approval_id = (@latest_ship_approval && ship_index == 1) ? "approval-modal-#{@project.id}" : nil %>
             <%
               mission_sub = entry.postable&.mission_submission
               mission_modal_id = if (is_member || current_user&.admin?) && @rejected_mission_sub && mission_sub == @rejected_mission_sub
@@ -923,6 +924,8 @@
                        project: @project,
                        ship_number: ship_count - ship_index + 1,
                        recert_modal_id: recert_id,
+                       show_approved_badge: true,
+                       approval_modal_id: approval_id,
                        is_member: is_member,
                        payout_review: entry.postable == @votes_for_payout&.dig(:ship_event) ? @votes_for_payout : nil,
                        mission_resubmit_modal_id: mission_modal_id %>
@@ -941,6 +944,11 @@
 
   <% if (is_member || current_user&.can_review?) && @project.needs_changes? %>
     <%= render "projects/recert_modal", project: @project, is_member: is_member %>
+  <% end %>
+
+  <% if @latest_ship_approval %>
+    <%= render "projects/approval_modal", project: @project,
+               review: @latest_ship_approval, is_member: is_member %>
   <% end %>
 
   <% if (is_member || current_user&.admin?) && @rejected_mission_sub %>

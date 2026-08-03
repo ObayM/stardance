@@ -1,0 +1,50 @@
+<% modal_id      = "approval-modal-#{project.id}" %>
+<% reviewer_name = review.reviewer&.display_name.presence %>
+<dialog id="<%= modal_id %>"
+        class="approval-modal"
+        data-controller="modal"
+        aria-labelledby="<%= modal_id %>-title">
+  <div class="approval-modal__panel">
+    <button type="button"
+            class="approval-modal__close"
+            onclick="document.getElementById(<%= modal_id.to_json %>).close()"
+            aria-label="Close">
+      &times;
+    </button>
+
+    <h3 id="<%= modal_id %>-title" class="approval-modal__title">Ship approved</h3>
+    <% if is_member %>
+      <p class="approval-modal__subtitle">A Shipwright vetted this ship, so it's up for voting now. Here's what they left you.</p>
+    <% else %>
+      <p class="approval-modal__subtitle">Reviewer feedback and walkthrough left for this ship.</p>
+    <% end %>
+
+    <% verdict_video_src = certification_verdict_video_src(review) %>
+    <% if verdict_video_src %>
+      <div class="approval-modal__video-wrap">
+        <video class="approval-modal__video"
+               controls
+               preload="metadata"
+               src="<%= verdict_video_src %>">
+        </video>
+      </div>
+    <% end %>
+
+    <% if review.feedback.present? %>
+      <div class="approval-modal__feedback">
+        <h4 class="approval-modal__feedback-label">
+          <%= reviewer_name ? "Feedback from #{reviewer_name}" : "Shipwright feedback" %>
+        </h4>
+        <p class="approval-modal__feedback-body"><%= review.feedback %></p>
+      </div>
+    <% end %>
+
+    <div class="approval-modal__actions">
+      <button type="button"
+              class="approval-modal__btn"
+              onclick="document.getElementById(<%= modal_id.to_json %>).close()">
+        Close
+      </button>
+    </div>
+  </div>
+</dialog>
